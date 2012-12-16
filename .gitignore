@@ -1,0 +1,21 @@
+cache\~$*
+
+php-errors.log
+
+#################
+## Sublime Text 2
+#################
+
+*.sublime-project
+*.sublime-workspace
+sftp-config.json
+
+############
+## Windows
+############
+
+# Windows image file caches
+Thumbs.db 
+
+# Folder config file
+Desktop.ini
