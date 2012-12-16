@@ -1,6 +1,6 @@
 <?php
-    require_once('simpletest/autorun.php');
-	require_once('../screenscraper.php');
+    require_once __DIR__. 'simpletest/autorun.php';
+	require_once __DIR__. '../screenscraper.php';
 
     class ScreenscraperTest extends UnitTestCase
     {
