@@ -1,4 +1,4 @@
-ScreenScraper
+ScreenScraper [![Build Status](https://travis-ci.org/jeffory/ScreenScraper.png?branch=master)](https://travis-ci.org/jeffory/ScreenScraper)
 =============
 
 A PHP class to make scrapping web pages with XPaths simple.
