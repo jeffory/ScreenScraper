@@ -97,6 +97,12 @@ class ScreenScraper
      * @var string
      **/
     public $request_http_code;
+    /**
+     * Returned HTTP content-type
+     *
+     * @var string
+     **/
+    public $request_content_type;
 
     /**
      * CURL arguments, for debugging
@@ -155,6 +161,12 @@ class ScreenScraper
         {
             $cache_key = sha1($this->request_url. $this->request_cookie. serialize($this->request_params). $this->request_useragent. $this->request_method. $this->request_referer. serialize($arguments));
 
+            // Assume urls that start with '//' are http protocal requests
+            if (strpos($this->request_url, '//', 0) === 0)
+            {
+                $this->request_url = 'http:'. $this->request_url;
+            }
+
             // Sort out the url and parameters
             if (!empty($this->request_params))
             {
@@ -192,8 +204,13 @@ class ScreenScraper
                         CURLOPT_MAXREDIRS => 5,
                         CURLOPT_COOKIEFILE => $this->request_cookie,
                         CURLOPT_COOKIEJAR => $this->request_cookie,
-                        CURLOPT_USERAGENT => $this->request_useragent
+                        CURLOPT_USERAGENT => $this->request_useragent,
+                        CURLOPT_COOKIESESSION => true
                     );
+
+                // Bad code, only temporary
+                if (!strncmp($this->request_url, 'https', strlen('https')))
+                    $curl_opts += array(CURLOPT_HTTPAUTH => CURLAUTH_ANY, CURLOPT_SSL_VERIFYPEER => false);
 
                 if (!empty($this->request_referer))
                     $curl_opts += array(CURLOPT_REFERER => $this->request_referer);
@@ -203,6 +220,9 @@ class ScreenScraper
 
                 if (!empty($this->request_params))
                     $curl_opts += array(CURLOPT_POSTFIELDS => $this->request_params);
+
+                if (!empty($this->cookie_data))
+                    $curl_opts += array(CURLOPT_COOKIE => $this->cookie_data);
 
                 // Request logging (Only logs last request)
                 if (!empty($this->request_log))
@@ -233,6 +253,10 @@ class ScreenScraper
                 
                 $this->request_actual_url = curl_getinfo($curl, CURLINFO_EFFECTIVE_URL);
                 $this->request_http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                $this->request_content_type = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
+
+                $this->request_error = curl_error($curl);
+
                 curl_close ($curl);
 
                 if (!isset($arguments['cache']) || $arguments['cache'] === true)
@@ -242,7 +266,14 @@ class ScreenScraper
             }
         }
 
-        return $this;
+        if (empty($this->request_error))
+        {
+            return $this;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     /**
@@ -250,22 +281,25 @@ class ScreenScraper
      *
      * @return void
      **/
-    public function findByXpath($query)
+    public function findByXpath($query, $data=null)
     {
         $ret = array();
 
-        $data = $this;
+        if (empty($data))
+        {
+            $data = $this;
+        }
+        
         $doc = new DomDocument();
 
         if (@$doc->loadHTML($data))
         {
             $domXPath = new DomXPath($doc);
+            //$domXPath->registerNamespace("php", "http://php.net/xpath");
 
             if (is_string($query))
             {
                 $items = $domXPath->query($query);
-
-                print_r($items);
 
                 foreach ($items as $item)
                 {
@@ -274,9 +308,9 @@ class ScreenScraper
                     $ret[] = $item;
                 }
             }
-            else
+            elseif (is_array($query))
             {
-
+                
             }
 
             return $ret;
@@ -291,7 +325,7 @@ class ScreenScraper
     /**
      * Return the classes processed json data as array
      *
-     * @return void
+     * @return string
      **/
     public function jsonDecode()
     {
@@ -371,6 +405,16 @@ class ScreenScraper
             $inner_html .= trim($dom_doc->saveHTML());
         }
         return $inner_html;
+    }
+
+    /**
+     * Save the data to file
+     *
+     * @return boolean
+     **/
+    public function save($filename)
+    {
+        return file_put_contents($filename, $this);
     }
 } // END class ScreenScraper
 
