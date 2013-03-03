@@ -1,6 +1,7 @@
 cache/~$*
 _test.php
 php-errors.log
+mirror/*
 
 #################
 ## Sublime Text 2
