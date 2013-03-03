@@ -40,7 +40,7 @@
         public function testPageRedirect()
         {
             $data = $this->scraper->retrievePage('http://example.com/', array('cache' => false));
-            $this->assertEqual($this->scraper->request_actual_url, 'http://www.iana.org/domains/example/');
+            $this->assertEqual($this->scraper->request_actual_url, 'http://www.iana.org/domains/example');
         }
 
         public function testPageCaching()
